@@ -9,6 +9,10 @@
 /tailwind.config.js.bak
 /package-lock.json
 /package.json
+/jsconfig.json
+/postcss.config.cjs
+/prisma.config.ts.bak
+/prisma.config.ts
 /proxy.js
 node_modules/
 .next/
