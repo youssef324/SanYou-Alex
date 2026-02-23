@@ -1,0 +1,15 @@
+/.env
+/.env.local
+/.next
+/build.log
+/prisma.config.ts
+/seed_log.txt
+/seed_output.txt
+/tailwind.config.js
+/tailwind.config.js.bak
+/package-lock.json
+/package.json
+/proxy.js
+node_modules/
+.next/
+out/
