@@ -48,7 +48,7 @@ export default function HomePage() {
             fontSize: '14px',
             color: '#9333ea'
           }}>
-            New Collection 2024
+            New Collection 2026
           </span>
           <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginTop: '20px' }}>
             Glow Up with{' '}
