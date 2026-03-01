@@ -35,11 +35,10 @@ model Product {
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
   
-  brand       String?
-  ingredients String?
-  inStock     Boolean  @default(true)
+  manifactor    String?
+  inStock     Boolean  @default(true)   //mwgouda fel stock wla la2 
   inventory   Int      @default(0)
-  isFeatured  Boolean  @default(false)
+  isFeatured  Boolean  @default(true)   //tt3arad 3la el website 
   
   cartItems   CartItem[]
   orderItems  OrderItem[]

@@ -64,5 +64,10 @@ export const authOptions = {
   }
 }
 
-const handler = NextAuth(authOptions)
+const handler = async (req, ctx) => {
+  // In Next.js 15, params is a promise and must be awaited
+  await ctx.params
+  return NextAuth(authOptions)(req, ctx)
+}
+
 export { handler as GET, handler as POST }
