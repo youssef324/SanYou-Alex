@@ -9,7 +9,7 @@ if (!connectionString) {
 }
 console.log('✅ DATABASE_URL loaded successfully')
 
-// ✅ استخدم PrismaClient العادي من غير adapter
+
 const prisma = new PrismaClient()
 
 async function main() {
@@ -42,13 +42,31 @@ async function main() {
       }
     })
 
-    const facecare = await prisma.category.upsert({
-      where: { slug: "facecare" },
+    const nails = await prisma.category.upsert({
+      where: { slug: "nails" },
       update: {},
       create: {
-        name: "Facecare",
-        slug: "facecare",
-        description: "Effective face products"
+        name: "Nails",
+        slug: "nails",
+        description: "Effective nail products"
+      }
+    })
+    const babies = await prisma.category.upsert({
+      where: { slug: "babies" },
+      update: {},
+      create: {
+        name: "Babies",
+        slug: "babies",
+        description: "Effective babies products"
+      }
+    })
+    const makeup = await prisma.category.upsert({
+      where: { slug: "makeup" },
+      update: {},
+      create: {
+        name: "Make-up",
+        slug: "make-up",
+        description: "Effective makeup products"
       }
     })
 
