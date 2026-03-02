@@ -1,17 +1,16 @@
 import { prisma } from '@/lib/prisma-server'
 import { cookies } from 'next/headers'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const cookieStore = await cookies()
     const sessionId = cookieStore.get('sessionId')?.value
 
     let cart = await prisma.cart.findFirst({
-      where: session?.user?.id 
-        ? { userId: session.user.id }
+      where: session?.user?.id
+        ? { userId: Number(session.user.id) }
         : { sessionId: sessionId },
       include: {
         items: {

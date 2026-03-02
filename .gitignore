@@ -7,8 +7,6 @@
 /seed_output.txt
 /tailwind.config.js
 /tailwind.config.js.bak
-/package-lock.json
-/package.json
 /jsconfig.json
 /postcss.config.cjs
 /prisma.config.ts.bak

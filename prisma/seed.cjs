@@ -9,7 +9,7 @@ if (!connectionString) {
 }
 console.log('✅ DATABASE_URL loaded successfully')
 
-// ✅ استخدم PrismaClient العادي من غير adapter
+
 const prisma = new PrismaClient()
 
 async function main() {
@@ -20,45 +20,68 @@ async function main() {
     await prisma.$queryRaw`SELECT 1`
     console.log('✅ Database connection successful')
 
-    // 1. Create categories dynamically (IDs are handled by autoincrement)
-    console.log('Creating/Updating categories...')
-    const skincare = await prisma.category.upsert({
-      where: { slug: "skincare" },
-      update: {},
+    // 1. Create categories with explicit IDs
+    console.log('Creating/Updating categories with specific IDs...')
+    const skin = await prisma.category.upsert({
+      where: { id: 1 },
+      update: { name: "Skin", slug: "skin", description: "Products for healthy and glowing skin" },
       create: {
-        name: "Skincare",
-        slug: "skincare",
+        id: 1,
+        name: "Skin",
+        slug: "skin",
         description: "Products for healthy and glowing skin"
       }
     })
 
-    const haircare = await prisma.category.upsert({
-      where: { slug: "haircare" },
-      update: {},
+    const hair = await prisma.category.upsert({
+      where: { id: 2 },
+      update: { name: "Hair", slug: "hair", description: "Products for beautiful and strong hair" },
       create: {
-        name: "Haircare",
-        slug: "haircare",
+        id: 2,
+        name: "Hair",
+        slug: "hair",
         description: "Products for beautiful and strong hair"
       }
     })
 
-    const facecare = await prisma.category.upsert({
-      where: { slug: "facecare" },
-      update: {},
+    const nails = await prisma.category.upsert({
+      where: { id: 3 },
+      update: { name: "Nails", slug: "nails", description: "Effective nail products" },
       create: {
-        name: "Facecare",
-        slug: "facecare",
-        description: "Effective face products"
+        id: 3,
+        name: "Nails",
+        slug: "nails",
+        description: "Effective nail products"
       }
     })
 
-    // 2. Define Products using actual category IDs
-    console.log('Upserting products...')
+    const babies = await prisma.category.upsert({
+      where: { id: 4 },
+      update: { name: "Babies", slug: "babies", description: "Effective babies products" },
+      create: {
+        id: 4,
+        name: "Babies",
+        slug: "babies",
+        description: "Effective babies products"
+      }
+    })
+
+    const makeup = await prisma.category.upsert({
+      where: { id: 5 },
+      update: { name: "Make-up", slug: "make-up", description: "Effective makeup products" },
+      create: {
+        id: 5,
+        name: "Make-up",
+        slug: "make-up",
+        description: "Effective makeup products"
+      }
+    })
+
     const products = [
       {
         name: "Vacation retinol serum",
         price: 325,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/Vacation-retinol-serum-30-ml-325-LE.jpeg",
         description: "Retinol serum for skin renewal - 30ml",
         inStock: true
@@ -66,15 +89,15 @@ async function main() {
       {
         name: "PURE SKIN CLEANSER",
         price: 105,
-        categoryId: skincare.id,
-        image: "/images/products/Pure-skin-cleanser-200-ml-105-LE.jpeg",
+        categoryId: skin.id,
+        image: "/images/products/Kolagra-Oily-skin-cleanser-200ml-105LE.jpeg",
         description: "Gentle skin cleanser - 200ml",
         inStock: true
       },
       {
         name: "Kolagra Oily skin cleanser",
         price: 105,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/Kolagra-Oily-skin-cleanser-200ml-105LE.jpeg",
         description: "For oily skin - 200ml",
         inStock: true
@@ -82,7 +105,7 @@ async function main() {
       {
         name: "COSRX advanced snail 96 mucin power essence",
         price: 730,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/COSRX-advanced-snail-96-mucin-power-100-ml-730LE.jpeg",
         description: "Snail mucin essence - 100ml",
         inStock: true
@@ -90,7 +113,7 @@ async function main() {
       {
         name: "COSRX advanced snail 92 all in one cream",
         price: 730,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/COSRX-advanced-snail-92-all-in-one-cream-100-gm-730-LE.jpeg",
         description: "All-in-one cream - 100g",
         inStock: true
@@ -98,15 +121,15 @@ async function main() {
       {
         name: "KOLAGRA SHAMPOO",
         price: 105,
-        categoryId: haircare.id,
-        image: "/images/products/KOLAGRA-SHAMPOO-200ml-105-LE.jpeg",
+        categoryId: hair.id,
+        image: "/images/products/Kolagra-Oily-skin-cleanser-200ml-105LE.jpeg",
         description: "Nourishing shampoo - 200ml",
         inStock: true
       },
       {
         name: "Fino shampoo and conditioner set",
         price: 725,
-        categoryId: haircare.id,
+        categoryId: hair.id,
         image: "/images/products/Fino-shampoo-and-conditioner-set-300ml-725-LE.jpeg",
         description: "Complete hair care set - 300ml",
         inStock: true
@@ -114,7 +137,7 @@ async function main() {
       {
         name: "Starville facial cleanser",
         price: 150,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/Starville-facial-cleanser-300-ml-150-LE-100-ml-75Le.jpeg",
         description: "Facial cleanser - 300ml",
         inStock: true
@@ -122,7 +145,7 @@ async function main() {
       {
         name: "Starville hyaluronic acid serum",
         price: 225,
-        categoryId: skincare.id,
+        categoryId: skin.id,
         image: "/images/products/Starville-hyaluronic-acid-serum-30-ml-225LE.jpeg",
         description: "Hyaluronic acid serum - 30ml",
         inStock: true
@@ -130,8 +153,8 @@ async function main() {
       {
         name: "Twist and go anti hair loss lotion spray",
         price: 290,
-        categoryId: haircare.id,
-        image: "/images/products/Twist-and-go-anti-hair-loss-lotion-spray-250-ml-290-LE.jpeg",
+        categoryId: hair.id,
+        image: "/images/products/Twist-and-go--anti-hair-loss-lotion-spray-250-ml-290-LE.jpeg",
         description: "Anti hair loss spray - 250ml",
         inStock: true
       }

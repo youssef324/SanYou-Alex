@@ -1,19 +1,18 @@
-'use client'
-
-import Navbar from '@/components/layout/navbar'
-import Footer from '@/components/layout/footer'
-import { SessionProvider } from 'next-auth/react'
+import { NextAuthProvider } from '@/components/providers/SessionProvider'
 import './globals.css'
 
-export default function RootLayout({ children, session }) {
+export const metadata = {
+  title: 'SanYou - Beauty & Skincare',
+  description: "SanYou is not just Make-up or Skincare - it's a feeling of elegance you can wear everyday",
+}
+
+export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body suppressHydrationWarning={true}>
-        <SessionProvider session={session}>
-          <Navbar />
-          <main style={{ minHeight: 'calc(100vh - 400px)' }}>{children}</main>
-          <Footer />
-        </SessionProvider>
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
       </body>
     </html>
   )

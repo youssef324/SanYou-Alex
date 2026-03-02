@@ -1,16 +1,15 @@
 import { prisma } from '@/lib/prisma-server'
 import { cookies } from 'next/headers'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { auth } from '@/lib/auth'
 
-export async function POST(request) {
+export async function PUT(request) {
   try {
     const { cartItemId, quantity } = await request.json()
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     const cookieStore = await cookies()
     const sessionId = cookieStore.get('sessionId')?.value
 
-    //check if the cart belongs to the user  
+    // check if the cart item exists
     const cartItem = await prisma.cartItem.findUnique({
       where: { id: parseInt(cartItemId) },
       include: { cart: true }
@@ -19,9 +18,12 @@ export async function POST(request) {
     if (!cartItem) {
       return Response.json({ error: 'Item not found' }, { status: 404 })
     }
-    // check if the cart item exists
-    if (cartItem.cart.userId !== session?.user?.id && 
-        cartItem.cart.sessionId !== sessionId) {
+    // check if the cart belongs to the user
+    const isOwner = session?.user?.id
+      ? Number(cartItem.cart.userId) === Number(session.user.id)
+      : cartItem.cart.sessionId === sessionId;
+
+    if (!isOwner) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
