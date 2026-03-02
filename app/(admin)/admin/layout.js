@@ -11,6 +11,7 @@ import { signOut } from 'next-auth/react'
 const sidebarLinks = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/products', label: 'Products', icon: Package },
+    { href: '/admin/categories', label: 'Categories', icon: ShoppingBag },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/admin/users', label: 'Users', icon: Users },
 ]
@@ -69,8 +70,8 @@ export default function AdminLayout({ children }) {
                                 key={link.href}
                                 href={link.href}
                                 className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-white/15 text-white shadow-md'
-                                        : 'text-purple-200 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-white/15 text-white shadow-md'
+                                    : 'text-purple-200 hover:bg-white/10 hover:text-white'
                                     }`}
                             >
                                 <Icon className="w-5 h-5 flex-shrink-0" />

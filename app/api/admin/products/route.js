@@ -1,12 +1,5 @@
 import { prisma } from '@/lib/prisma-server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-async function adminGuard() {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 1) return null
-    return session
-}
+import { adminGuard } from '@/lib/admin-guard'
 
 // GET all products (admin)
 export async function GET() {

@@ -1,16 +1,19 @@
 import { prisma } from '@/lib/prisma-server'
-import { adminGuard } from '@/lib/admin-guard'
+import { auth } from '@/lib/auth'
 
-// GET all orders
 export async function GET() {
-    const session = await adminGuard()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 403 })
+    const session = await auth()
+    if (!session?.user?.id) {
+        return Response.json({ error: 'Not authenticated' }, { status: 401 })
+    }
 
     try {
         const orders = await prisma.order.findMany({
+            where: { userId: session.user.id },
             include: {
-                items: { include: { product: true } },
-                user: { select: { name: true, email: true } }
+                items: {
+                    include: { product: true }
+                }
             },
             orderBy: { createdAt: 'desc' }
         })

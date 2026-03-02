@@ -2,157 +2,251 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Minus, Plus, ShoppingBag, ArrowLeft, ArrowRight, X, Shield, Truck } from 'lucide-react'
 
 export default function CartPage() {
-    const [cart, setCart] = useState(null)
+    const [items, setItems] = useState([])
+    const [recommendations, setRecommendations] = useState([])
     const [loading, setLoading] = useState(true)
+    const [updating, setUpdating] = useState(false)
+    const router = useRouter()
 
-    const fetchCart = async () => {
+    const fetchCartAndRecs = async () => {
         try {
             const res = await fetch('/api/cart')
             const data = await res.json()
-            setCart(data.cart)
+            setItems(data.cart?.items || [])
+
+            // Fetch recommendations based on cart categories
+            const prodRes = await fetch('/api/products')
+            const allProds = await prodRes.json()
+
+            if (data.cart?.items?.length > 0) {
+                const catIds = [...new Set(data.cart.items.map(i => i.product.categoryId))]
+                const recs = allProds
+                    .filter(p => catIds.includes(p.categoryId) && !data.cart.items.find(i => i.productId === p.id))
+                    .slice(0, 4)
+                setRecommendations(recs)
+            } else {
+                setRecommendations(allProds.slice(0, 4))
+            }
         } catch (error) {
-            console.error('Error:', error)
+            console.error(error)
         } finally {
             setLoading(false)
         }
     }
 
-    useEffect(() => { fetchCart() }, [])
+    useEffect(() => {
+        fetchCartAndRecs()
+    }, [])
 
-    const updateQuantity = async (itemId, quantity) => {
-        if (quantity < 1) return
-        try {
-            await fetch('/api/cart/update', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cartItemId: itemId, quantity })
-            })
-            fetchCart()
-            window.dispatchEvent(new Event('cart-updated'))
-        } catch (error) {
-            console.error('Error:', error)
-        }
+    const updateQuantity = async (itemId, newQty) => {
+        if (newQty < 1) return
+        setUpdating(true)
+        await fetch('/api/cart/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cartItemId: itemId, quantity: newQty })
+        })
+        await fetchCartAndRecs()
+        window.dispatchEvent(new Event('cart-updated'))
+        setUpdating(false)
     }
 
     const removeItem = async (itemId) => {
-        try {
-            await fetch('/api/cart/remove', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cartItemId: itemId })
-            })
-            fetchCart()
-            window.dispatchEvent(new Event('cart-updated'))
-        } catch (error) {
-            console.error('Error:', error)
-        }
+        setUpdating(true)
+        await fetch('/api/cart/remove', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cartItemId: itemId })
+        })
+        window.dispatchEvent(new Event('cart-updated'))
+        await fetchCartAndRecs()
+        setUpdating(false)
     }
 
-    const total = cart?.items?.reduce((sum, item) => sum + item.product.price * item.quantity, 0) || 0
+    const subtotal = items.reduce((sum, item) => {
+        const price = item.product.discount > 0
+            ? item.product.price * (1 - item.product.discount / 100)
+            : item.product.price
+        return sum + (price * item.quantity)
+    }, 0)
 
-    if (loading) {
+    if (loading) return (
+        <div className="pt-32 text-center h-screen bg-[#fdf8f6]/30">
+            <div className="w-12 h-12 border-4 border-[#e8a4b8] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-400 font-serif italic">Preparing your collection...</p>
+        </div>
+    )
+
+    if (items.length === 0) {
         return (
-            <div className="pt-20 max-w-4xl mx-auto px-4 py-8">
-                <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse flex gap-4">
-                            <div className="w-24 h-24 bg-gray-200 rounded-xl" />
-                            <div className="flex-1 space-y-3">
-                                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                                <div className="h-3 bg-gray-200 rounded w-1/4" />
-                            </div>
-                        </div>
-                    ))}
+            <div className="pt-32 max-w-7xl mx-auto px-4 text-center min-h-screen">
+                <div className="bg-white rounded-[3rem] py-20 px-4 border border-purple-50 shadow-sm">
+                    <ShoppingBag className="w-20 h-20 text-gray-100 mx-auto mb-6" />
+                    <h2 className="text-3xl font-serif font-bold text-[#2d1b2e] mb-4">Your collection is empty</h2>
+                    <p className="text-gray-500 mb-10 max-w-sm mx-auto">Explore our premium selection of beauty and skincare essentials to find your perfect match.</p>
+                    <Link href="/" className="inline-flex items-center gap-2 bg-[#2d1b2e] text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-black transition-all">
+                        <ArrowLeft className="w-4 h-4" /> Start Shopping
+                    </Link>
                 </div>
+
+                {recommendations.length > 0 && (
+                    <div className="mt-20 text-left pb-20">
+                        <h3 className="text-2xl font-serif font-bold text-[#2d1b2e] mb-8">Curated for You</h3>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {recommendations.map(p => (
+                                <Link key={p.id} href={`/products/${p.id}`} className="group space-y-4">
+                                    <div className="aspect-[4/5] bg-white rounded-3xl overflow-hidden shadow-sm border border-purple-50">
+                                        <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    </div>
+                                    <div className="px-2">
+                                        <p className="text-[10px] font-bold text-[#e8a4b8] uppercase tracking-widest">{p.category?.name}</p>
+                                        <h4 className="font-bold text-sm text-gray-900 truncate">{p.name}</h4>
+                                        <p className="font-black text-gray-900 mt-1">LE {p.price}</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         )
     }
 
     return (
-        <div className="pt-20 max-w-4xl mx-auto px-4 py-8">
-            <div className="flex items-center gap-4 mb-8">
-                <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg transition">
-                    <ArrowLeft className="w-5 h-5" />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
-                    <p className="text-gray-500 text-sm">{cart?.items?.length || 0} items</p>
+        <div className="pt-24 pb-20 bg-[#fdf8f6]/30 min-h-screen">
+            <div className="max-w-7xl mx-auto px-4">
+                <div className="flex items-center justify-between mb-12">
+                    <h1 className="text-4xl font-serif font-bold text-[#2d1b2e]">Your Bag</h1>
+                    <p className="text-sm font-bold text-[#e8a4b8] uppercase tracking-widest">{items.length} Items Selected</p>
                 </div>
-            </div>
 
-            {!cart?.items?.length ? (
-                <div className="text-center py-20">
-                    <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h3>
-                    <p className="text-gray-500 mb-6">Start adding products to your cart!</p>
-                    <Link href="/" className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
-                        Browse Products
-                    </Link>
-                </div>
-            ) : (
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Cart Items */}
-                    <div className="lg:col-span-2 space-y-4">
-                        {cart.items.map((item, i) => (
-                            <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm flex gap-4 fade-up hover:shadow-md transition-all" style={{ animationDelay: `${i * 0.05}s` }}>
-                                <Link href={`/products/${item.product.id}`} className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                                    <img src={item.product.image || '/placeholder.jpeg'} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" />
-                                </Link>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900 text-sm">{item.product.name}</h3>
-                                            <p className="text-xs text-purple-500">{item.product.category?.name}</p>
-                                        </div>
-                                        <button onClick={() => removeItem(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-3">
-                                        <div className="flex items-center bg-gray-100 rounded-lg overflow-hidden">
-                                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1.5 hover:bg-gray-200 transition">
-                                                <Minus className="w-3.5 h-3.5" />
-                                            </button>
-                                            <span className="w-8 text-center text-sm font-semibold">{item.quantity}</span>
-                                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-1.5 hover:bg-gray-200 transition">
-                                                <Plus className="w-3.5 h-3.5" />
+                <div className="grid lg:grid-cols-12 gap-12 items-start">
+                    <div className="lg:col-span-8 space-y-6">
+                        {items.map((item) => {
+                            const currentPrice = item.product.discount > 0
+                                ? (item.product.price * (1 - item.product.discount / 100))
+                                : item.product.price;
+
+                            return (
+                                <div key={item.id} className="bg-white rounded-[2.5rem] p-6 sm:p-8 flex flex-col sm:flex-row gap-8 shadow-sm border border-purple-50 group transition-all hover:shadow-xl hover:shadow-purple-900/5">
+                                    <Link href={`/products/${item.product.id}`} className="w-full sm:w-40 aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 shadow-inner">
+                                        <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+                                    </Link>
+
+                                    <div className="flex-1 flex flex-col">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-[#e8a4b8] uppercase tracking-widest mb-1">{item.product.category?.name}</p>
+                                                <Link href={`/products/${item.product.id}`}>
+                                                    <h3 className="text-xl font-bold text-[#2d1b2e] group-hover:text-[#e8a4b8] transition-colors">{item.product.name}</h3>
+                                                </Link>
+                                                {item.color && (
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="text-xs font-bold text-gray-400">Color:</span>
+                                                        <span className="text-xs font-black text-gray-700 uppercase tracking-tighter">{item.color}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button onClick={() => removeItem(item.id)} className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition">
+                                                <X className="w-5 h-5" />
                                             </button>
                                         </div>
-                                        <p className="font-bold text-gray-900">LE {(item.product.price * item.quantity).toFixed(2)}</p>
+
+                                        <div className="mt-auto pt-6 flex flex-wrap items-end justify-between gap-4">
+                                            <div className="flex items-center bg-gray-50 border border-purple-50 rounded-2xl p-1 shadow-inner">
+                                                <button
+                                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                    disabled={updating || item.quantity <= 1}
+                                                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#2d1b2e] hover:bg-white rounded-xl transition shadow-sm bg-transparent border-0"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </button>
+                                                <span className="w-12 text-center font-black text-gray-900">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                    disabled={updating}
+                                                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#2d1b2e] hover:bg-white rounded-xl transition shadow-sm bg-transparent border-0"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
+
+                                            <div className="text-right">
+                                                {item.product.discount > 0 && (
+                                                    <p className="text-xs text-gray-300 line-through font-medium">LE {(item.product.price * item.quantity).toFixed(2)}</p>
+                                                )}
+                                                <p className="text-2xl font-black text-gray-900">LE {(currentPrice * item.quantity).toFixed(2)}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            )
+                        })}
+
+                        {/* Recommendations */}
+                        {recommendations.length > 0 && (
+                            <div className="pt-12">
+                                <h3 className="text-2xl font-serif font-bold text-[#2d1b2e] mb-8">You May Also Like</h3>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {recommendations.map(p => (
+                                        <Link key={p.id} href={`/products/${p.id}`} className="group space-y-3">
+                                            <div className="aspect-square bg-white rounded-3xl overflow-hidden shadow-sm border border-purple-50">
+                                                <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            </div>
+                                            <div className="px-1 text-center">
+                                                <h4 className="font-bold text-xs text-gray-900 truncate">{p.name}</h4>
+                                                <p className="font-black text-[#e8a4b8] text-sm mt-0.5">LE {p.price}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
                             </div>
-                        ))}
+                        )}
                     </div>
 
-                    {/* Summary */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
-                            <div className="space-y-3 pb-4 border-b border-gray-100">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Subtotal</span>
-                                    <span className="font-medium">LE {total.toFixed(2)}</span>
+                    <div className="lg:col-span-4 sticky top-28">
+                        <div className="bg-[#2d1b2e] text-white rounded-[3rem] p-10 shadow-3xl shadow-purple-900/40 relative overflow-hidden">
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+
+                            <h2 className="text-2xl font-serif font-bold mb-10 border-b border-white/10 pb-6">Bag Summary</h2>
+
+                            <div className="space-y-6 mb-10">
+                                <div className="flex justify-between text-white/60 font-medium">
+                                    <span>Items Subtotal</span>
+                                    <span>LE {subtotal.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Shipping</span>
-                                    <span className="text-green-600 font-medium">Free</span>
+                                <div className="flex justify-between text-white/60 font-medium">
+                                    <span>Shipping Estimate</span>
+                                    <span className="text-green-400 uppercase text-xs font-black tracking-widest">Complimentary</span>
+                                </div>
+                                <div className="h-px bg-white/10 my-6" />
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-white/40 text-xs font-black uppercase tracking-[0.2em] mb-1">Total</p>
+                                        <p className="text-4xl font-black">LE {subtotal.toFixed(2)}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex justify-between mt-4 text-lg font-bold">
-                                <span>Total</span>
-                                <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">LE {total.toFixed(2)}</span>
-                            </div>
-                            <Link href="/checkout" className="mt-6 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:-translate-y-0.5">
-                                Proceed to Checkout <ArrowRight className="w-4 h-4" />
+
+                            <Link
+                                href="/checkout"
+                                className="w-full bg-white text-[#2d1b2e] h-16 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-[#e8a4b8] hover:text-white transition-all duration-500 shadow-xl"
+                            >
+                                SECURE CHECKOUT <ArrowRight className="w-5 h-5" />
                             </Link>
+
+                            <div className="mt-8 flex items-center justify-center gap-4 text-white/30">
+                                <Shield className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Secured by Stripe Intelligence</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     )
 }

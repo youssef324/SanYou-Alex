@@ -1,12 +1,5 @@
 import { prisma } from '@/lib/prisma-server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-async function adminGuard() {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id || session.user.role !== 1) return null
-    return session
-}
+import { adminGuard } from '@/lib/admin-guard'
 
 // GET single product
 export async function GET(request, { params }) {
@@ -39,14 +32,18 @@ export async function PUT(request, { params }) {
             data: {
                 name: body.name,
                 description: body.description,
-                price: body.price,
+                price: parseFloat(body.price),
+                discount: parseFloat(body.discount || 0),
                 image: body.image,
-                categoryId: body.categoryId,
+                images: body.images || [],
+                colorVariants: body.colorVariants || [],
+                categoryId: parseInt(body.categoryId),
                 brand: body.brand || null,
                 ingredients: body.ingredients || null,
-                inventory: body.inventory || 0,
+                inventory: parseInt(body.inventory || 0),
                 inStock: body.inStock ?? true,
-                isFeatured: body.isFeatured ?? false
+                isFeatured: body.isFeatured ?? false,
+                isHidden: body.isHidden ?? false
             }
         })
         return Response.json({ product })

@@ -2,8 +2,8 @@ import { NextAuthProvider } from '@/components/providers/SessionProvider'
 import './globals.css'
 
 export const metadata = {
-  title: 'Smart Store',
-  description: 'Premium Skincare and Beauty Store',
+  title: 'SanYou - Beauty & Skincare',
+  description: "SanYou is not just Make-up or Skincare - it's a feeling of elegance you can wear everyday",
 }
 
 export default function RootLayout({ children }) {

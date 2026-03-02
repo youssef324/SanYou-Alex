@@ -26,19 +26,24 @@ model User {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  image       String
-  images      String[] @default([])
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String
+  price         Float
+  discount      Float    @default(0)   // discount percentage e.g. 20 means 20%
+  image         String
+  images        String[] @default([])
+  colorVariants Json?    // [{color: "Red", hex: "#FF0000", images: ["/img1.jpg"]}]
+  categoryId    Int
+  category      Category @relation(fields: [categoryId], references: [id])
   
+  brand         String?
+  ingredients   String?
   manifactor    String?
-  inStock     Boolean  @default(true)   //mwgouda fel stock wla la2 
-  inventory   Int      @default(0)
-  isFeatured  Boolean  @default(true)   //tt3arad 3la el website 
+  inStock       Boolean  @default(true)
+  inventory     Int      @default(0)
+  isFeatured    Boolean  @default(false)
+  isHidden      Boolean  @default(false)
   
   cartItems   CartItem[]
   orderItems  OrderItem[]
@@ -56,6 +61,18 @@ model Category {
   description String?
   image       String?
   products    Product[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HeroSection {
+  id          Int      @id @default(autoincrement())
+  tagline     String   @default("SanYou is not just Make-up or Skincare - it's a feeling of elegance you can wear everyday")
+  buttonText  String   @default("Shop Now")
+  buttonLink  String   @default("/products")
+  image       String?
+  isActive    Boolean  @default(true)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -90,6 +107,7 @@ model CartItem {
   productId Int
   product   Product  @relation(fields: [productId], references: [id])
   quantity  Int      @default(1)
+  color     String?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,6 +124,9 @@ model Order {
   items         OrderItem[]
   total         Float
   status        String   @default("PENDING")
+  paymentMethod String   @default("COD")  // "COD" or "CARD"
+  paymentStatus String   @default("PENDING") // "PENDING", "PAID", "FAILED"
+  stripeSessionId String?
   
   shippingAddress String?
   
@@ -125,6 +146,7 @@ model OrderItem {
   product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
   price     Float
+  color     String?
 }
 
 model Address {
@@ -137,7 +159,7 @@ model Address {
   city       String
   state      String
   postalCode String
-  country    String   @default("US")
+  country    String   @default("EG")
   phone      String?
   
   isDefault  Boolean  @default(false)

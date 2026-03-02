@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, ArrowUpRight } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null)
@@ -64,6 +65,27 @@ export default function AdminDashboard() {
                 })}
             </div>
 
+            {/* Quick Actions */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-purple-50">
+                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-purple-500" /> Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <Link href="/admin/products/new" className="flex items-center justify-center gap-3 p-4 bg-purple-50 text-purple-700 rounded-2xl font-bold hover:bg-purple-100 transition-all border border-purple-100/50 group">
+                        <Package className="w-5 h-5 group-hover:scale-110 transition-transform" /> Add Product
+                    </Link>
+                    <Link href="/admin/categories" className="flex items-center justify-center gap-3 p-4 bg-pink-50 text-pink-700 rounded-2xl font-bold hover:bg-pink-100 transition-all border border-pink-100/50 group">
+                        <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" /> Manage Categories
+                    </Link>
+                    <Link href="/admin/orders" className="flex items-center justify-center gap-3 p-4 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-100 transition-all border border-blue-100/50 group">
+                        <TrendingUp className="w-5 h-5 group-hover:scale-110 transition-transform" /> View Orders
+                    </Link>
+                    <Link href="/" className="flex items-center justify-center gap-3 p-4 bg-gray-50 text-gray-700 rounded-2xl font-bold hover:bg-gray-100 transition-all border border-gray-100/50 group">
+                        <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /> Visit Store
+                    </Link>
+                </div>
+            </div>
+
             {/* Top Products & Recent Orders */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Top Products */}
@@ -107,9 +129,9 @@ export default function AdminDashboard() {
                                 <div className="text-right">
                                     <p className="text-sm font-semibold text-gray-900">LE {order.total}</p>
                                     <span className={`text-xs px-2 py-0.5 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                                            order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-700' :
-                                                order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                                                    'bg-gray-100 text-gray-700'
+                                        order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-700' :
+                                            order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-gray-100 text-gray-700'
                                         }`}>
                                         {order.status}
                                     </span>
